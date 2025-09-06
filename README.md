@@ -61,3 +61,72 @@ Finish cleaning and prepping the CPCB data, matching timestamps to station locat
 Write scripts to crop satellite images so they focus on areas around each air quality station.
 
 Start integrating satellite and ground data to build the first air quality prediction model.
+
+
+
+# Week 2: Data Preparation & First Model Training
+Focus of Week 2
+
+In Week 1, I focused on deciding the project topic and collecting some initial data.
+Week 2 was about taking that raw data, cleaning it up, and trying out the first round of models. The aim was just to see if pollution levels (PM2.5) could be predicted at all from satellite image features.
+
+Data Preparation
+
+CPCB Ground Data
+
+Fixed missing values and cleaned timestamps.
+
+Filtered the data to match the time window of satellite images.
+
+Saved as: cpcb_cleaned.csv.
+
+INSAT Satellite Data
+
+Worked with GeoTIFF files from the TIR1 and WV bands.
+
+Pulled out simple features like mean, standard deviation, minimum, and maximum pixel values.
+
+Saved as: insat_features_sample.csv.
+
+Merged Dataset
+
+Matched CPCB readings with the closest INSAT timestamps.
+
+Created a small training dataset:
+
+timestamp | station_id | PM2.5 | band_mean | band_std | band_min | band_max
+
+
+Saved as: training_dataset.csv.
+
+Model Training
+
+I tested three basic models to get a sense of what works:
+
+Model	R² (approx)	RMSE (µg/m³)	Notes
+Linear Regression	~0.15–0.20	High	Too simple, poor fit
+Random Forest	~0.45–0.55	Moderate	Better, captured non-linear trends
+XGBoost	~0.60–0.68	Lower	Best so far, most reliable
+Challenges
+
+CPCB data had gaps and missing values that needed handling.
+
+Timing mismatch between CPCB (hourly) and INSAT (half-hourly) meant I had to use nearest-neighbor matching.
+
+With only very simple features from the satellite images, the models could only go so far.
+
+What I Learned
+
+Even with limited features, it’s possible to explain around 60% of the variance in PM2.5.
+
+XGBoost looks like a strong option for further work.
+
+Cleaning and aligning the data is just as important as the actual model training.
+
+Next Steps (Week 3)
+
+Add more advanced features (rolling stats, percentiles, skewness, etc.).
+
+Crop satellite images around stations to get more location-specific data.
+
+Try out LightGBM and improve evaluation with time-aware validation.
