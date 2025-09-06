@@ -1,13 +1,14 @@
-# week1
-This repo consist of the work I have done during Edunet Internship's week 1.  
-Week 1: Environmental Monitoring & Pollution Control
+# Week 1: Environmental Monitoring & Pollution Control
 Understanding the Challenge
+
 Air pollution is a serious issue worldwide, but getting real-time data for specific locations isn’t easy. Most air quality measurements rely on ground monitoring stations, which are expensive to set up and maintain. These stations are often spread thin and sometimes provide incomplete or inconsistent data.
 
 My Project Idea
+
 I’m exploring whether it’s possible to predict air quality—specifically PM2.5 levels—using satellite images, supplemented by ground-based measurements. If successful, this approach could make it easier to monitor pollution across large areas, without depending solely on costly ground stations.
 
 Week 1 Goals
+
 Finalized the Project Topic: Committed to using satellite imagery and ground truth data to predict air pollution levels.
 
 Data Exploration: Researched what kinds of satellite and ground datasets are available, including their formats and coverage.
@@ -15,118 +16,144 @@ Data Exploration: Researched what kinds of satellite and ground datasets are ava
 Started Collecting Data: Began downloading both satellite images and CPCB air quality data to kick off the project.
 
 Data Collection Overview
-Satellite Data (INSAT-3D/3DR):
 
-Data Source: MOSDAC.gov.in
+Satellite Data (INSAT-3D/3DR)
 
-Focused on two main spectral bands:
+Source: MOSDAC.gov.in
 
-TIR1 (Thermal Infrared): Tracks heat patterns and surface temps.
+Focused on two main bands:
 
-WV (Water Vapour): Offers insight into atmospheric conditions.
+TIR1 (Thermal Infrared) → tracks heat patterns and surface temps
 
-Format: GeoTIFF (.tif) images updated every half hour.
+WV (Water Vapour) → gives insight into atmospheric conditions
 
-Ground Data (CPCB):
+Format: GeoTIFF (.tif), updated every half hour
 
-Data Source: Kaggle’s CPCB dataset (hourly PM2.5 values).
+Ground Data (CPCB)
 
-Includes several states and stations but is quite raw:
+Source: Kaggle CPCB dataset (hourly PM2.5 values)
 
-Lots of missing data
+Covers multiple stations but raw data had issues:
+
+Missing values
 
 Inconsistent timestamps
 
-Mixed data formats
+Mixed file formats
 
 Key Challenges This Week
-Huge Satellite Data Volumes: Even for one state, the number of images is overwhelming, which means I need to plan for storage and data processing early on.
 
-Messy Ground Data: The CPCB data requires cleaning—fixing timestamps, handling missing values, and standardizing formats for analysis.
+Huge Satellite Data Volumes → even for one state, the number of images was overwhelming.
 
-Learning Curve: Getting comfortable with satellite imaging concepts, band selection, data formats, and how to organize downloads from MOSDAC.
+Messy Ground Data → CPCB data needed timestamp fixes, missing-value handling, and standardization.
+
+Learning Curve → working with GeoTIFFs, spectral bands, and MOSDAC downloads.
 
 What I’ve Done So Far
+
 Defined a clear direction for the project.
 
-Collected the first batch of CPCB data for initial testing.
+Collected the first batch of CPCB data.
 
-Downloaded a pilot set of INSAT images for a small time window.
+Downloaded a pilot set of INSAT images.
 
-Carried out a basic review of GeoTIFF files and took a first look at CPCB data structure.
+Took a first look at both GeoTIFFs and CPCB CSVs.
 
 Looking Ahead: Week 2 Plans
-Finish cleaning and prepping the CPCB data, matching timestamps to station locations.
 
-Write scripts to crop satellite images so they focus on areas around each air quality station.
+Clean CPCB data and align timestamps.
 
-Start integrating satellite and ground data to build the first air quality prediction model.
+Write scripts to crop satellite images around stations.
 
+Begin integrating satellite + ground data for the first prediction model.
 
-
-# Week 2: Data Preparation & First Model Training
+Week 2: Data Preparation & First Model Training
 Focus of Week 2
 
-In Week 1, I focused on deciding the project topic and collecting some initial data.
-Week 2 was about taking that raw data, cleaning it up, and trying out the first round of models. The aim was just to see if pollution levels (PM2.5) could be predicted at all from satellite image features.
+In Week 1, I focused on project direction and data collection.
+Week 2 was about cleaning up the raw data and running the first round of models. The goal was just to check if PM2.5 could be predicted at all from satellite features.
 
 Data Preparation
 
 CPCB Ground Data
 
-Fixed missing values and cleaned timestamps.
+Cleaned missing values and standardized timestamps.
 
-Filtered the data to match the time window of satellite images.
+Filtered to match INSAT data time windows.
 
-Saved as: cpcb_cleaned.csv.
+Output: cpcb_cleaned.csv.
 
 INSAT Satellite Data
 
-Worked with GeoTIFF files from the TIR1 and WV bands.
+Worked with TIR1 & WV GeoTIFF bands.
 
-Pulled out simple features like mean, standard deviation, minimum, and maximum pixel values.
+Extracted simple stats: mean, std, min, max pixel values.
 
-Saved as: insat_features_sample.csv.
+Output: insat_features_sample.csv.
 
 Merged Dataset
 
-Matched CPCB readings with the closest INSAT timestamps.
+Matched CPCB readings with closest INSAT timestamps.
 
-Created a small training dataset:
+Created training_dataset.csv with aligned values.
 
-timestamp | station_id | PM2.5 | band_mean | band_std | band_min | band_max
-
-
-Saved as: training_dataset.csv.
-
-Model Training
-
-I tested three basic models to get a sense of what works:
-
+Model Training – Baselines
 Model	R² (approx)	RMSE (µg/m³)	Notes
 Linear Regression	~0.15–0.20	High	Too simple, poor fit
-Random Forest	~0.45–0.55	Moderate	Better, captured non-linear trends
-XGBoost	~0.60–0.68	Lower	Best so far, most reliable
+Random Forest	~0.45–0.55	Moderate	Captured non-linear trends
+XGBoost	~0.60–0.68	Lower	Best among baselines, reliable
+Extended Models (Deeper Tests)
+
+I also tested a few stronger models with more data/features:
+
+LightGBM_1
+
+MAE: 39.90
+
+RMSE: 63.85
+
+R²: 0.6065
+
+Good performance, very close to XGBoost. Time-aware evaluation worked well.
+
+CatBoost_1
+
+MAE: 21.84
+
+RMSE: 34.01
+
+R²: -0.0161 (underfitting, poor generalization)
+
+XGB6 (Lite Version)
+
+MAE: 36.86
+
+RMSE: 60.76
+
+R²: 0.371 (weaker than full XGBoost, but still usable)
+
 Challenges
 
-CPCB data had gaps and missing values that needed handling.
+CPCB data gaps meant I had to drop or interpolate missing values.
 
-Timing mismatch between CPCB (hourly) and INSAT (half-hourly) meant I had to use nearest-neighbor matching.
+INSAT and CPCB timestamps didn’t always match → solved with nearest-neighbor alignment.
 
-With only very simple features from the satellite images, the models could only go so far.
+Simple features limited model performance; more advanced features are needed.
 
 What I Learned
 
-Even with limited features, it’s possible to explain around 60% of the variance in PM2.5.
+Even basic satellite features can explain ~60% of PM2.5 variance.
 
-XGBoost looks like a strong option for further work.
+XGBoost and LightGBM are the most promising models so far.
 
-Cleaning and aligning the data is just as important as the actual model training.
+Data cleaning & alignment take as much time (if not more) than the actual training.
 
 Next Steps (Week 3)
 
-Add more advanced features (rolling stats, percentiles, skewness, etc.).
+Add richer image features (rolling stats, percentiles, skewness).
 
-Crop satellite images around stations to get more location-specific data.
+Crop satellite images to station bounding boxes.
 
-Try out LightGBM and improve evaluation with time-aware validation.
+Run stronger models with time-aware validation.
+
+Compare LightGBM, CatBoost, and XGBoost on a larger dataset.
