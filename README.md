@@ -1,159 +1,50 @@
-# Week 1: Environmental Monitoring & Pollution Control
-Understanding the Challenge
+AirCast — Final Project README
 
-Air pollution is a serious issue worldwide, but getting real-time data for specific locations isn’t easy. Most air quality measurements rely on ground monitoring stations, which are expensive to set up and maintain. These stations are often spread thin and sometimes provide incomplete or inconsistent data.
+Short version: I built a proof-of-concept pipeline that combines INSAT satellite imagery with CPCB ground measurements to predict PM₂.₅. After cleaning and merging the data, doing careful time & station validation, and iterating on features and models, the final XGBoost model gives strong temporal and spatial performance (RMSE ≈ 28–29 μg/m³, R² ≈ 0.68–0.79).
 
-My Project Idea
+This README sums up what I did in Weeks 1–4, what the final model looks like, how it was validated, and what’s next.
 
-I’m exploring whether it’s possible to predict air quality—specifically PM2.5 levels—using satellite images, supplemented by ground-based measurements. If successful, this approach could make it easier to monitor pollution across large areas, without depending solely on costly ground stations.
+Project summary
 
-Week 1 Goals
+Goal: Predict PM₂.₅ (hourly) using INSAT (TIR1 & WV) satellite imagery + CPCB station data.
 
-Finalized the Project Topic: Committed to using satellite imagery and ground truth data to predict air pollution levels.
+Why: Ground stations are sparse and expensive. If satellite-derived features + historical pollution can predict PM₂.₅ reliably, this enables broader spatial coverage for air-quality monitoring.
 
-Data Exploration: Researched what kinds of satellite and ground datasets are available, including their formats and coverage.
+Scope: 20 CPCB stations, 2021–2022, ~102,720 hourly samples.
 
-Started Collecting Data: Began downloading both satellite images and CPCB air quality data to kick off the project.
+Week-by-week (short)
 
-Data Collection Overview
+Week 1: Picked the topic, researched datasets, started downloading INSAT GeoTIFFs and CPCB CSVs. Learned the limits (data volume, messy ground data).
 
-Satellite Data (INSAT-3D/3DR)
+Week 2: Cleaned CPCB timestamps/values, parsed GeoTIFFs, pulled simple image stats (mean/std/min/max), made a merged training file, ran baseline models (Linear, RF, XGBoost).
 
-Source: MOSDAC.gov.in
+Week 3: Scaled merging across stations & time, engineered more features (lags, rolling stats), ran stronger models including LightGBM/CatBoost/XGBoost variants.
 
-Focused on two main bands:
+Week 4: Final feature selection, locked leakage-safe features, trained the final XGBoost model, and ran robust validation (time splits, leave-one-station-out, nested CV).
 
-TIR1 (Thermal Infrared) → tracks heat patterns and surface temps
+What I improvised (short)
 
-WV (Water Vapour) → gives insight into atmospheric conditions
+I didn’t just run default pipelines — I tried multiple learners (LightGBM, CatBoost, XGBoost variants), switched to time-aware evaluation instead of random splits, tightened timestamp alignment logic, and enforced a leakage-safe feature selection (correlation + VIF checks). Those small changes turned a quick proof-of-concept into a reproducible, validated model.
 
-Format: GeoTIFF (.tif), updated every half hour
+Final model — quick facts
 
-Ground Data (CPCB)
+Algorithm: XGBoost Regressor (1000 trees)
 
-Source: Kaggle CPCB dataset (hourly PM2.5 values)
+Target: log1p(PM2.5) during training — inverse expm1() for final metrics.
 
-Covers multiple stations but raw data had issues:
+Features used: 72 leakage-safe features (fixed after correlation & VIF screening)
 
-Missing values
+Training samples: 102,720 hourly observations
 
-Inconsistent timestamps
+Stations: 20 CPCB monitoring stations
 
-Mixed file formats
+Date range: 2021–2022
 
-Key Challenges This Week
+Final performance (detailed)
+TimeSeriesSplit (temporal robustness)
 
-Huge Satellite Data Volumes → even for one state, the number of images was overwhelming.
+Mean RMSE: 27.98 ± 5.34 μg/m³
 
-Messy Ground Data → CPCB data needed timestamp fixes, missing-value handling, and standardization.
+Mean R²: 0.676 ± 0.154
 
-Learning Curve → working with GeoTIFFs, spectral bands, and MOSDAC downloads.
-
-What I’ve Done So Far
-
-Defined a clear direction for the project.
-
-Collected the first batch of CPCB data.
-
-Downloaded a pilot set of INSAT images.
-
-Took a first look at both GeoTIFFs and CPCB CSVs.
-
-Looking Ahead: Week 2 Plans
-
-Clean CPCB data and align timestamps.
-
-Write scripts to crop satellite images around stations.
-
-Begin integrating satellite + ground data for the first prediction model.
-
-Week 2: Data Preparation & First Model Training
-Focus of Week 2
-
-In Week 1, I focused on project direction and data collection.
-Week 2 was about cleaning up the raw data and running the first round of models. The goal was just to check if PM2.5 could be predicted at all from satellite features.
-
-Data Preparation
-
-CPCB Ground Data
-
-Cleaned missing values and standardized timestamps.
-
-Filtered to match INSAT data time windows.
-
-Output: cpcb_cleaned.csv.
-
-INSAT Satellite Data
-
-Worked with TIR1 & WV GeoTIFF bands.
-
-Extracted simple stats: mean, std, min, max pixel values.
-
-Output: insat_features_sample.csv.
-
-Merged Dataset
-
-Matched CPCB readings with closest INSAT timestamps.
-
-Created training_dataset.csv with aligned values.
-
-Model Training – Baselines
-Model	R² (approx)	RMSE (µg/m³)	Notes
-Linear Regression	~0.15–0.20	High	Too simple, poor fit
-Random Forest	~0.45–0.55	Moderate	Captured non-linear trends
-XGBoost	~0.60–0.68	Lower	Best among baselines, reliable
-Extended Models (Deeper Tests)
-
-I also tested a few stronger models with more data/features:
-
-LightGBM_1
-
-MAE: 39.90
-
-RMSE: 63.85
-
-R²: 0.6065
-
-Good performance, very close to XGBoost. Time-aware evaluation worked well.
-
-CatBoost_1
-
-MAE: 21.84
-
-RMSE: 34.01
-
-R²: -0.0161 (underfitting, poor generalization)
-
-XGB6 (Lite Version)
-
-MAE: 36.86
-
-RMSE: 60.76
-
-R²: 0.371 (weaker than full XGBoost, but still usable)
-
-Challenges
-
-CPCB data gaps meant I had to drop or interpolate missing values.
-
-INSAT and CPCB timestamps didn’t always match → solved with nearest-neighbor alignment.
-
-Simple features limited model performance; more advanced features are needed.
-
-What I Learned
-
-Even basic satellite features can explain ~60% of PM2.5 variance.
-
-XGBoost and LightGBM are the most promising models so far.
-
-Data cleaning & alignment take as much time (if not more) than the actual training.
-
-Next Steps (Week 3)
-
-Add richer image features (rolling stats, percentiles, skewness).
-
-Crop satellite images to station bounding boxes.
-
-Run stronger models with time-aware validation.
-
-Compare LightGBM, CatBoost, and XGBoost on a larger dataset.
+(Mean MAE not explicitly reported globally — see per-fold below; typical MAE ≈ 0.7×RMSE)
